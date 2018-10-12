@@ -41,10 +41,13 @@ def readAttribute(entry, offset, numA):
 	"""
 	read MFT attributes
 	"""
-	for num in range(0,numA):
+	#for num in range(0,numA+1):
+        num = 0
+        while offset < 1024:
+                print offset
 		### gather values
 		try:
-			type_ = struct.unpack('I',entry[offset:offset+4])[0]
+			type_ = struct.unpack('I',entry[offset:offset+4])[0] # Attribute Type Code
 			asize = struct.unpack('I',entry[offset+4:offset+8])[0]
 			nonresidentflag = hex(struct.unpack('B',entry[offset+8])[0])
 			lenname = entry[offset+9]
@@ -55,7 +58,14 @@ def readAttribute(entry, offset, numA):
 			break
 		### output values
 		print "Count: %s" % (num)
-		print "Attribute Type: %s" % (type_)
+                atypes = {16: '$STANDARD_INFORMATION (16)', 48: '$FILE_NAME (48)', 64: '$OBJECT_ID (64)', 128: '$DATA (128)', 144: '$INDEX_ROOT (144)'}
+                try:
+                        if type_ < 193:
+		                print "Attribute Type: %s" % (atypes[type_])
+                        else:
+                                print "Attribute Type: %s (Probably Slack)" % type_
+                except KeyError:
+		        print "Attribute Type: %s" % (type_)
 		print "Attribute Size: %s" % (asize)
 		print "Non-Resident Flag: %s" % (nonresidentflag)
 		if nonresidentflag == '0x0':
@@ -69,10 +79,14 @@ def readAttribute(entry, offset, numA):
 			print "Content Size: %s" % (contentsize)
 			print "Content Offset: %s" % (coff)
 			coff = offset + coff
+                        #print [entry[coff:coff+10]]
 		else:
 			### FIXME: handle non-resident mft entries
 			type_ = 128
-		if type_==16:
+                        print "Non-resident MFT Entry"
+                        coff = offset
+                        contentsize = None
+		if type_==16: # STANDARD_INFORMATION
 			### gather values
 			create = int(struct.unpack('Q',entry[coff:coff+8])[0])
 			modify = int(struct.unpack('Q',entry[coff+8:coff+16])[0])
@@ -98,7 +112,7 @@ def readAttribute(entry, offset, numA):
 			except:
 				print "File Last Access Time: %s" % ([access])
 			print "DOS File Permissions: %s" % (perms)
-		elif type_==48:
+		elif type_==48: # FILE_NAME
 			### gather values
 			seqnum = int(struct.unpack('I',entry[coff:coff+4])[0])
 			parentref = int(struct.unpack('>I',entry[coff+4:coff+8])[0])
@@ -151,12 +165,20 @@ def readAttribute(entry, offset, numA):
                                 print "Filename: %s" % (fname.decode('utf-16').encode('utf-8'))
                         except:
                                 print "Filename: %s" % ([fname])
-		elif type_==128:
+		elif type_==128: # DATA
 			print "$Data Entry"
+                        if contentsize:
+                                print [entry[coff:coff+contentsize]]
+                        else:
+                                print [entry[coff:]]
 
 		### move
-		offset = offset+asize
-		print
+                if asize > 0:
+                        offset = offset+asize
+                        num += 1
+                        print
+                else:
+                        break
 
 ############################################################################
 
