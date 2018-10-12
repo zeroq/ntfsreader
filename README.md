@@ -6,10 +6,13 @@ ntfsReader is a Python script for parsing NTFS partitions and extracting metainf
 Example Usage:
 
 * To display the partitions on a device
-    python ntfsReader.py /dev/sda --part
+    
+        python ntfsReader.py /dev/sda --part
 
 * To display all MFT entries of all NTFS partitions on a device
-    python ntfsReader.py /dev/sda --mft
+    
+        python ntfsReader.py /dev/sda --mft
 
 * To display all MFT entries of a VMDK file
-    python ntfsReader.py <path_to_vmdk> --vmdk --mft
+    
+        python ntfsReader.py <path_to_vmdk> --vmdk --mft
